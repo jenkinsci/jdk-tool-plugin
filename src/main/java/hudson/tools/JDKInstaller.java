@@ -203,7 +203,7 @@ public class JDKInstaller extends ToolInstaller {
 
             ProcStarter starter;
             if (header[0]==0x1F && header[1]==(byte)0x8B) {// gzip
-                starter = launcher.launch().cmds("tar", "xvzf", jdkBundle);
+                starter = launcher.launch().cmds("tar", "xzf", jdkBundle);
             } else {
                 fs.chmod(jdkBundle,0755);
                 starter = launcher.launch().cmds(jdkBundle, "-noregister");

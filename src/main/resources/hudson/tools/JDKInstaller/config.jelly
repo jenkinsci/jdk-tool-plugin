@@ -47,11 +47,11 @@ THE SOFTWARE.
   <f:entry title="" field="acceptLicense">
     <f:checkbox title="${%I agree to the Java SE Development Kit License Agreement}"/>
   </f:entry>
-  <f:entry>
+  <f:block>
     <div class="warning">
       Oracle Java SE 11+ is not available for business, commercial or production use without a commercial license.<br />
       Public updates for Oracle Java SE 8 released after January 2019 will not be available for business, commercial or production use without a commercial license.<br />
       <a href="https://www.oracle.com/technetwork/java/javase/overview/oracle-jdk-faqs.html" target="_blank">Oracle Java SE Licensing FAQ</a><br />
     </div>
-  </f:entry>
+  </f:block>
 </j:jelly>

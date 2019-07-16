@@ -14,8 +14,8 @@
         <jenkins.version>2.112</jenkins.version>
         <java.level>8</java.level>
     </properties>
-    <name>JDK Tool Plugin</name>
-    <description>Allows the JDK tool to be installed via download from Oracle's website.</description>
+    <name>Oracle Java SE Development Kit Installer Plugin</name>
+    <description>Allows the Oracle Java SE Development Kit (JDK) to be installed via download from Oracle's website.</description>
     <url>https://wiki.jenkins.io/display/JENKINS/JDK+Tool+Plugin</url>
     <licenses>
         <license>

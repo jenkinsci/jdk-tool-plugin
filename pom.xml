@@ -16,7 +16,7 @@
     </properties>
     <name>Oracle Java SE Development Kit Installer Plugin</name>
     <description>Allows the Oracle Java SE Development Kit (JDK) to be installed via download from Oracle's website.</description>
-    <url>https://github.com/jenkinsci/jdk-tool-plugin/url>
+    <url>https://github.com/jenkinsci/jdk-tool-plugin</url>
     <licenses>
         <license>
             <name>MIT License</name>

@@ -2,7 +2,7 @@ Oracle Java SE Development Kit Installer Plugin
 ===============================================
 
 [![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/jdk-tool.svg)](https://plugins.jenkins.io/jdk-tool)
-[![GitHub release](https://img.shields.io/github/release/jenkinsci/jdk-tool-plugin.svg?label=release)](https://github.com/jenkinsci/jdk-tool-plugin/releases/latest)
+[![GitHub release](https://img.shields.io/github/release/jenkinsci/jdk-tool-plugin.svg?label=changelog)](https://github.com/jenkinsci/jdk-tool-plugin/releases/latest)
 
 This plugin provides a tool installer for installing [Oracle Java SE Development Kit](https://www.oracle.com/technetwork/java/javase/) in Jenkins. 
 

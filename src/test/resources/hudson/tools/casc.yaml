@@ -1,0 +1,11 @@
+tool:
+  jdk:
+    installations:
+      - home: "/jdk"
+        name: "jdk8"
+        properties:
+          - installSource:
+              installers:
+                - jdkInstaller:
+                    acceptLicense: true
+                    id: "jdk-8u181-oth-JPR"

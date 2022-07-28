@@ -68,7 +68,7 @@ import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -594,7 +594,7 @@ public class JDKInstaller extends ToolInstaller {
         return "/"+getDescriptor().getDescriptorUrl()+"/enterCredential";
     }
 
-    private static @Nonnull JDKFamilyList getJDKFamilyList() throws IOException {
+    private static @NonNull JDKFamilyList getJDKFamilyList() throws IOException {
         JDKList list = JDKList.all().get(JDKList.class);
         if (list == null) {
             throw new IOException("JDKList is not registered as a Downloadable");
@@ -602,7 +602,7 @@ public class JDKInstaller extends ToolInstaller {
         return list.toList();
     }
 
-    private static @Nonnull Path fileToPath(File f) throws IOException {
+    private static @NonNull Path fileToPath(File f) throws IOException {
         try {
             return f.toPath();
         } catch (InvalidPathException e) {

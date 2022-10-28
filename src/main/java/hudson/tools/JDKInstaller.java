@@ -70,6 +70,7 @@ import org.apache.http.util.EntityUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.jdk_tool.Messages;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 
@@ -890,7 +891,7 @@ public class JDKInstaller extends ToolInstaller {
          * Submits the Oracle account username/password.
          */
         @RequirePOST
-        public org.kohsuke.stapler.HttpResponse doPostCredential(@QueryParameter String username, @QueryParameter String password) throws IOException, ServletException {
+        public HttpResponse doPostCredential(@QueryParameter String username, @QueryParameter String password) throws IOException, ServletException {
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             this.username = username;
             this.password = Secret.fromString(password);

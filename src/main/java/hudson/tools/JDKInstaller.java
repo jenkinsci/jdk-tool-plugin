@@ -51,16 +51,22 @@ import jenkins.model.Jenkins;
 import jenkins.security.MasterToSlaveCallable;
 import net.sf.json.JSONObject;
 import net.sf.json.JsonConfig;
-import org.apache.commons.httpclient.Cookie;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethodBase;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.util.EntityUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.jdk_tool.Messages;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -101,12 +107,6 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
  * @since 1.305
  */
 public class JDKInstaller extends ToolInstaller {
-
-    static {
-        // this socket factory will not attempt to bind to the client interface
-        Protocol.registerProtocol("http", new Protocol("http", new hudson.util.NoClientBindProtocolSocketFactory(), 80));
-        Protocol.registerProtocol("https", new Protocol("https", new hudson.util.NoClientBindSSLProtocolSocketFactory(), 443));
-    }
 
     /**
      * The release ID that Sun assigns to each JDK, such as "jdk-6u13-oth-JPR@CDS-CDS_Developer"
@@ -460,32 +460,55 @@ public class JDKInstaller extends ToolInstaller {
 
         log.getLogger().println("Downloading JDK from "+primary.filepath);
 
-        HttpClient hc = new HttpClient();
-        hc.getParams().setParameter("http.useragent","Mozilla/5.0 (Windows; U; MSIE 9.0; Windows NT 9.0; en-US)");
+        HttpClientBuilder builder = HttpClients.custom();
+        builder.setUserAgent("Mozilla/5.0 (Windows; U; MSIE 9.0; Windows NT 9.0; en-US)");
+        BasicCookieStore cookieStore = new BasicCookieStore();
+        builder.setDefaultCookieStore(cookieStore);
         ProxyConfiguration jpc = Jenkins.getInstance().proxy;
         if(jpc != null) {
-            hc.getHostConfiguration().setProxy(jpc.name, jpc.port);
-            if(jpc.getUserName() != null)
-                hc.getState().setProxyCredentials(AuthScope.ANY,new UsernamePasswordCredentials(jpc.getUserName(),jpc.getPassword()));
+            HttpHost proxy = new HttpHost(jpc.name, jpc.port);
+            builder.setProxy(proxy);
+            if (jpc.getUserName() != null) {
+                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                credentialsProvider.setCredentials(
+                        new AuthScope(jpc.name, jpc.port),
+                        new UsernamePasswordCredentials(
+                                jpc.getUserName(), jpc.getSecretPassword().getPlainText()));
+                builder.setDefaultCredentialsProvider(credentialsProvider);
+            }
         }
+        CloseableHttpClient hc = builder.build();
 
         int authCount=0, totalPageCount=0;  // counters for avoiding infinite loop
 
-        HttpMethodBase m = new GetMethod(primary.filepath);
-        hc.getState().addCookie(new Cookie(".oracle.com","gpw_e24",".", "/", -1, false));
-        hc.getState().addCookie(new Cookie(".oracle.com","oraclelicense","accept-securebackup-cookie", "/", -1, false));
+        HttpRequestBase m = new HttpGet(primary.filepath);
+
+        BasicClientCookie cookie = new BasicClientCookie("gpw_e24", ".");
+        cookie.setDomain(".oracle.com");
+        cookie.setPath("/");
+        cookie.setSecure(false);
+        cookieStore.addCookie(cookie);
+
+        cookie = new BasicClientCookie("oraclelicense", "accept-securebackup-cookie");
+        cookie.setDomain(".oracle.com");
+        cookie.setPath("/");
+        cookie.setSecure(false);
+        cookieStore.addCookie(cookie);
+
+        CloseableHttpResponse response = null;
         try {
             while (true) {
                 if (totalPageCount++>16) // looping too much
                     throw new IOException("Unable to find the login form");
 
                 LOGGER.fine("Requesting " + m.getURI());
-                int r = hc.executeMethod(m);
+                response = hc.execute(m);
+                int r = response.getStatusLine().getStatusCode();
                 if (r/100==3) {
                     // redirect?
-                    String loc = m.getResponseHeader("Location").getValue();
-                    m.releaseConnection();
-                    m = new GetMethod(loc);
+                    String loc = response.getFirstHeader("Location").getValue();
+                    response.close();
+                    m = new HttpGet(loc);
                     continue;
                 }
                 if (r!=200)
@@ -508,8 +531,8 @@ public class JDKInstaller extends ToolInstaller {
                     if (m.getURI().getPath().contains("/loginAuth.do")) {
                         try {
                             Thread.sleep(2000);
-                            m.releaseConnection();
-                            m = new GetMethod(new URI(m.getURI(), "/oaam_server/authJump.do?jump=false", true).toString());
+                            response.close();
+                            m = new HttpGet(m.getURI().resolve("/oaam_server/authJump.do?jump=false"));
                             continue;
                         } catch (InterruptedException x) {
                             throw new IOException("Interrupted while logging in", x);
@@ -517,15 +540,14 @@ public class JDKInstaller extends ToolInstaller {
                     }
 
                     LOGGER.fine("Appears to be a login page");
-                    String resp = IOUtils.toString(m.getResponseBodyAsStream(), m.getResponseCharSet());
-                    m.releaseConnection();
+                    String resp = EntityUtils.toString(response.getEntity());
+                    response.close();
                     Matcher pm = Pattern.compile("<form .*?action=\"([^\"]*)\".*?</form>", Pattern.DOTALL).matcher(resp);
                     if (!pm.find())
                         throw new IllegalStateException("Unable to find a form in the response:\n"+resp);
 
                     String form = pm.group();
-                    PostMethod post = new PostMethod(
-                            new URL(new URL(m.getURI().getURI()),pm.group(1)).toExternalForm());
+                    HttpPost post = new HttpPost(m.getURI().resolve(pm.group(1)));
 
                     if (m.getURI().getPath().contains("/authJump.do")) {
                         m = post;
@@ -552,12 +574,12 @@ public class JDKInstaller extends ToolInstaller {
                                 throw new AbortException("Unable to install JDK unless a valid username/password is provided.");
                             }
                         }
-                        post.addParameter(n, v);
+                        post.getParams().setParameter(n, v);
                     }
 
                     m = post;
                 } else {
-                    log.getLogger().println("Downloading " + m.getResponseContentLength() + " bytes");
+                    log.getLogger().println("Downloading " + response.getEntity().getContentLength() + " bytes");
 
                     // download to a temporary file and rename it in to handle concurrency and failure correctly,
                     Path tmp = fileToPath(new File(cache.getPath()+".tmp"));
@@ -567,7 +589,7 @@ public class JDKInstaller extends ToolInstaller {
                             Files.createDirectories(tmpParent);
                         }
                         try (OutputStream out = Files.newOutputStream(tmp)) {
-                            IOUtils.copy(m.getResponseBodyAsStream(), out);
+                            IOUtils.copy(response.getEntity().getContent(), out);
                         }
 
                         Files.move(tmp, fileToPath(cache), StandardCopyOption.REPLACE_EXISTING);
@@ -578,7 +600,9 @@ public class JDKInstaller extends ToolInstaller {
                 }
             }
         } finally {
-            m.releaseConnection();
+            if (response != null) {
+                response.close();
+            }
         }
     }
 

@@ -3,9 +3,9 @@ package hudson.tools;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlFormUtil;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlFormUtil;
+import org.htmlunit.html.HtmlPage;
 import hudson.tools.JDKInstaller.DescriptorImpl;
 
 import java.io.InputStream;
@@ -66,8 +66,8 @@ public class JDKInstallerTest {
     public void enterCredential() throws Exception {
         HtmlPage p = j.createWebClient().goTo("descriptorByName/hudson.tools.JDKInstaller/enterCredential");
         HtmlForm form = p.getFormByName("postCredential");
-        form.getInputByName("username").setValueAttribute("foo");
-        form.getInputByName("password").setValueAttribute("bar");
+        form.getInputByName("username").setValue("foo");
+        form.getInputByName("password").setValue("bar");
         HtmlFormUtil.submit(form, null);
 
         DescriptorImpl d = j.jenkins.getDescriptorByType(DescriptorImpl.class);

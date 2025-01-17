@@ -75,7 +75,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.File;
@@ -879,7 +879,7 @@ public class JDKInstaller extends ToolInstaller {
 
         public FormValidation doCheckAcceptLicense(@QueryParameter boolean value) {
             if (username==null || password==null)
-                return FormValidation.errorWithMarkup(Messages.JDKInstaller_RequireOracleAccount(Stapler.getCurrentRequest().getContextPath()+'/'+getDescriptorUrl()+"/enterCredential"));
+                return FormValidation.errorWithMarkup(Messages.JDKInstaller_RequireOracleAccount(Stapler.getCurrentRequest2().getContextPath()+'/'+getDescriptorUrl()+"/enterCredential"));
             if (value) {
                 return FormValidation.ok();
             } else {

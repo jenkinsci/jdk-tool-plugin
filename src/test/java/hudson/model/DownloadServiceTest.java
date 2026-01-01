@@ -6,17 +6,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import net.sf.json.JSONObject;
-import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Kohsuke Kawaguchi
  */
-public class DownloadServiceTest {
+class DownloadServiceTest {
 
     @Test
-    public void testReduceFunctionWithJDKJsons() throws Exception {
+    void testReduceFunctionWithJDKJsons() throws Exception {
         URL resource1 = DownloadServiceTest.class.getResource("hudson.tools.JDKInstaller1.json");
         URL resource2 = DownloadServiceTest.class.getResource("hudson.tools.JDKInstaller2.json");
         URL resource3 = DownloadServiceTest.class.getResource("hudson.tools.JDKInstaller3.json");

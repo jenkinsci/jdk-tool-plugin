@@ -4,19 +4,18 @@ import hudson.ExtensionList;
 import hudson.model.JDK;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
-import org.junit.Rule;
-import org.junit.Test;
+import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class JDKInstallerCascTest {
-    @Rule
-    public JenkinsConfiguredWithCodeRule r = new JenkinsConfiguredWithCodeRule();
+@WithJenkinsConfiguredWithCode
+class JDKInstallerCascTest {
 
     @ConfiguredWithCode("casc.yaml")
     @Test
-    public void configuredByCasC() {
+    void configuredByCasC(JenkinsConfiguredWithCodeRule r) {
         final JDK.DescriptorImpl descriptor = ExtensionList.lookupSingleton(JDK.DescriptorImpl.class);
         assertEquals(1, descriptor.getInstallations().length);
 
